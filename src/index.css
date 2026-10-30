@@ -99,3 +99,33 @@ td.actions .btn { padding: 5px 12px; font-size: .85rem; }
   .login-art { padding: 28px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* form + pratinjau */
+.modal.wide { width: min(860px, 100%); }
+.split { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+.fields { display: flex; flex-direction: column; gap: 14px; }
+fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+legend { font-size: .9rem; font-weight: 600; padding: 0 6px; }
+.opt-row { display: grid; grid-template-columns: 1fr 150px; gap: 8px; }
+.small-note { font-size: .8rem; }
+.pv-wrap { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; }
+.pv-wrap > small { color: var(--clay); font-weight: 600; }
+.pv { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.pv h3 { font-family: "Fraunces", serif; font-size: 1.15rem; }
+.pv p { font-size: .92rem; }
+.pv-media { width: 100%; aspect-ratio: 16 / 9; background: var(--bark); border-radius: 8px; display: grid; place-items: center; color: var(--cream); font-size: .85rem; overflow: hidden; }
+.pv-media video { width: 100%; height: 100%; object-fit: cover; }
+.pv-q { font-family: "Fraunces", serif; font-size: 1.05rem; }
+.pv-opt { width: 100%; display: flex; justify-content: space-between; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: .9rem; }
+.pv-opt em { color: var(--clay); font-style: normal; font-weight: 600; white-space: nowrap; }
+.pv-price { font-weight: 600; color: var(--clay); }
+@media (max-width: 800px) { .split { grid-template-columns: 1fr; } }
+
+/* gambar produk */
+.thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.thumb.big { width: 100%; height: 140px; }
+.pv-media img { width: 100%; height: 100%; object-fit: cover; }
+label.inline select { width: auto; }
+
+label.inline.check { gap: 6px; font-weight: 400; }
+label.inline.check input { width: auto; }

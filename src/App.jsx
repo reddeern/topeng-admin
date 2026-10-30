@@ -9,21 +9,30 @@ const ADMIN = { user: "admin", pass: "admin123" }; // login statis
 /* ---------- data awal (pengganti database) ---------- */
 const seed = {
   topeng: [
-    { id: "t1", nama: "Topeng Klana", daerah: "Cirebon", kategori: "Tari", deskripsi: "Wajah merah melambangkan watak angkara." },
-    { id: "t2", nama: "Topeng Panji", daerah: "Malang", kategori: "Tari", deskripsi: "Wajah putih halus, tokoh satria." },
-    { id: "t3", nama: "Topeng Barong", daerah: "Bali", kategori: "Ritual", deskripsi: "Penjaga kebaikan dalam pertunjukan Barong." },
+    { id: "t1", nama: "Panji Asmoro Bangun", sifat: "Bijaksana", deskripsi: "Satria halus yang tenang, adil, dan berwibawa." },
+    { id: "t2", nama: "Gunungsari", sifat: "Pemberani", deskripsi: "Ksatria muda yang gagah berani dan setia." },
+    { id: "t3", nama: "Klana Sewandana", sifat: "Ambisius", deskripsi: "Raja gagah yang penuh hasrat dan percaya diri." },
+    { id: "t4", nama: "Dewi Sekartaji", sifat: "Lembut", deskripsi: "Putri anggun yang penyayang dan tulus." },
   ],
   kuis: [
-    { id: "k1", pertanyaan: "Topeng Klana identik dengan warna?", jawaban: "Merah", tingkat: "Mudah" },
-    { id: "k2", pertanyaan: "Topeng Panji berasal dari daerah?", jawaban: "Malang", tingkat: "Sedang" },
+    {
+      id: "k1",
+      pertanyaan: "Temanmu sedang dalam bahaya. Apa yang paling mungkin kamu lakukan?",
+      opsi: [
+        { teks: "Langsung menolong tanpa ragu", karakter: "Gunungsari" },
+        { teks: "Menyusun rencana dengan tenang", karakter: "Panji Asmoro Bangun" },
+        { teks: "Menemani dan menenangkannya", karakter: "Dewi Sekartaji" },
+        { teks: "Mengambil alih dan memimpin", karakter: "Klana Sewandana" },
+      ],
+    },
   ],
   video: [
-    { id: "v1", judul: "Sejarah Topeng Malangan", topeng: "Topeng Panji", status: "Selesai" },
-    { id: "v2", judul: "Makna Warna Topeng Klana", topeng: "Topeng Klana", status: "Diproses" },
+    { id: "v1", judul: "Sejarah Topeng Malangan", topeng: "Panji Asmoro Bangun", namaFile: "sejarah-malangan.mp4", url: "" },
+    { id: "v2", judul: "Keberanian Gunungsari", topeng: "Gunungsari", namaFile: "gunungsari.mp4", url: "" },
   ],
   produk: [
-    { id: "p1", nama: "Topeng Klana Mini", harga: 150000, stok: 12, kategori: "Souvenir" },
-    { id: "p2", nama: "Topeng Panji Dekor", harga: 275000, stok: 5, kategori: "Dekorasi" },
+    { id: "p1", nama: "Topeng Klana Mini", harga: 150000, stok: 12 },
+    { id: "p2", nama: "Topeng Panji Dekor", harga: 275000, stok: 5 },
   ],
   pesanan: [
     { id: "o1", pelanggan: "Sari Wulandari", produk: "Topeng Klana Mini", jumlah: 2, total: 300000, status: "Selesai", tanggal: "2026-09-12" },
@@ -78,19 +87,129 @@ function Login({ onLogin }) {
   );
 }
 
-/* ---------- Halaman CRUD generik (Create, Read, Update, Delete, Search) ---------- */
-function CrudPage({ title, noun, items, setItems, fields, update = true, searchable = true, extra }) {
+/* ---------- Kartu pratinjau per modul ---------- */
+const PV = {
+  topeng: (r) => (
+    <div className="pv">
+      <div className="pv-media"><Mask size={72} /></div>
+      <h3>{r.nama || "Nama topeng"}</h3>
+      <span className="badge">{r.sifat || "Sifat"}</span>
+      <p>{r.deskripsi || "Deskripsi akan tampil di sini."}</p>
+    </div>
+  ),
+  video: (r) => (
+    <div className="pv">
+      <div className="pv-media video">
+        {r.url ? <video src={r.url} controls /> : <span>Belum ada video</span>}
+      </div>
+      <h3>{r.judul || "Judul video"}</h3>
+      <p className="muted">Topeng terkait: {r.topeng || "-"}</p>
+    </div>
+  ),
+  kuis: (r) => (
+    <div className="pv">
+      <p className="pv-q">{r.pertanyaan || "Pertanyaan akan tampil di sini."}</p>
+      {r.opsi.map((o, i) => (
+        <div className="pv-opt" key={i}>
+          <span>{o.teks || `Pilihan ${i + 1}`}</span>
+          <em>{o.karakter}</em>
+        </div>
+      ))}
+      <p className="muted small-note">Nama karakter hanya terlihat oleh admin.</p>
+    </div>
+  ),
+  produk: (r) => (
+    <div className="pv">
+      <div className="pv-media">
+        {r.gambar ? <img src={r.gambar} alt={r.nama} /> : <Mask size={72} />}
+      </div>
+      <h3>{r.nama || "Nama produk"}</h3>
+      <p className="pv-price">{rupiah(r.harga)}</p>
+      <p className="muted">Stok: {r.stok}</p>
+    </div>
+  ),
+  pesanan: (r) => (
+    <div className="pv">
+      <h3>{r.pelanggan || "Pelanggan"}</h3>
+      <p className="muted">{r.tanggal || "-"}</p>
+      <div className="pv-opt"><span>{r.produk || "Produk"} × {r.jumlah}</span><em>{rupiah(r.total)}</em></div>
+      <span className={`badge ${r.status}`}>{r.status}</span>
+    </div>
+  ),
+};
+
+/* ---------- Halaman CRUD generik (Create, Read, Update, Delete, Search + pratinjau) ---------- */
+function CrudPage({ title, noun, items, setItems, fields, preview, update = true, searchable = true }) {
   const [q, setQ] = useState("");
   const [form, setForm] = useState(null); // null = tertutup
+  const [showPv, setShowPv] = useState(false);
+  const [view, setView] = useState(null);
   const [del, setDel] = useState(null);
 
-  const empty = () => Object.fromEntries(fields.map((f) => [f.key, f.options ? f.options[0] : f.type === "number" ? 0 : ""]));
-  const shown = items.filter((r) => Object.values(r).join(" ").toLowerCase().includes(q.toLowerCase()));
+  const empty = () =>
+    Object.fromEntries(
+      fields.map((f) => [
+        f.key,
+        f.type === "choices" ? Array.from({ length: 4 }, () => ({ teks: "", karakter: f.options[0] || "" }))
+          : f.options ? f.options[0] || ""
+          : f.type === "number" ? 0 : "",
+      ])
+    );
+  const openForm = (data) => { setShowPv(false); setForm(data); };
+  const shown = items.filter((r) => JSON.stringify(r).toLowerCase().includes(q.toLowerCase()));
 
   const save = (e) => {
     e.preventDefault();
     setItems(form.id ? items.map((r) => (r.id === form.id ? form : r)) : [...items, { ...form, id: uid() }]);
     setForm(null);
+  };
+
+  const renderField = (f) => {
+    const set = (v) => setForm({ ...form, [f.key]: v });
+    if (f.type === "choices") {
+      const upd = (i, patch) => set(form[f.key].map((x, j) => (j === i ? { ...x, ...patch } : x)));
+      return (
+        <fieldset key={f.key}>
+          <legend>{f.label}</legend>
+          <p className="muted small-note">{f.hint}</p>
+          {form[f.key].map((o, i) => (
+            <div className="opt-row" key={i}>
+              <input required placeholder={`Pilihan ${i + 1}`} value={o.teks} onChange={(e) => upd(i, { teks: e.target.value })} />
+              <select value={o.karakter} onChange={(e) => upd(i, { karakter: e.target.value })}>
+                {f.options.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+          ))}
+        </fieldset>
+      );
+    }
+    if (f.type === "file") {
+      return (
+        <label key={f.key}>{f.label}
+          <input type="file" accept={f.accept} required={f.required && !form.id}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) setForm({ ...form, [f.key]: URL.createObjectURL(file), [f.nameKey]: file.name });
+            }} />
+          {form[f.nameKey] && <span className="muted small-note">Dipilih: {form[f.nameKey]}</span>}
+          {f.accept.startsWith("image") && form[f.key] && <img className="thumb big" src={form[f.key]} alt="Pratinjau gambar" />}
+        </label>
+      );
+    }
+    return (
+      <label key={f.key}>{f.label}
+        {f.options ? (
+          <select value={form[f.key]} onChange={(e) => set(e.target.value)}>
+            {f.options.map((o) => <option key={o}>{o}</option>)}
+          </select>
+        ) : f.type === "textarea" ? (
+          <textarea rows="3" value={form[f.key]} onChange={(e) => set(e.target.value)} />
+        ) : (
+          <input type={f.type || "text"} required value={form[f.key]}
+            onChange={(e) => set(f.type === "number" ? Number(e.target.value) : e.target.value)} />
+        )}
+      </label>
+    );
   };
 
   return (
@@ -99,16 +218,16 @@ function CrudPage({ title, noun, items, setItems, fields, update = true, searcha
         <h1>{title}</h1>
         <div className="tools">
           {searchable && <input className="search" placeholder={`Cari ${noun}…`} value={q} onChange={(e) => setQ(e.target.value)} />}
-          <button className="btn primary" onClick={() => setForm(empty())}>Tambah {noun}</button>
+          <button className="btn primary" onClick={() => openForm(empty())}>Tambah {noun}</button>
         </div>
       </header>
-      {extra}
       <Table
         cols={fields.filter((f) => !f.hideInTable)}
         rows={shown}
         actions={(r) => (
           <>
-            {update && <button className="btn ghost" onClick={() => setForm(r)}>Ubah</button>}
+            <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>
+            {update && <button className="btn ghost" onClick={() => openForm(r)}>Ubah</button>}
             <button className="btn danger" onClick={() => setDel(r)}>Hapus</button>
           </>
         )}
@@ -116,23 +235,16 @@ function CrudPage({ title, noun, items, setItems, fields, update = true, searcha
 
       {form && (
         <div className="overlay" onClick={() => setForm(null)}>
-          <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
+          <form className={`modal ${showPv ? "wide" : ""}`} onClick={(e) => e.stopPropagation()} onSubmit={save}>
             <h2>{form.id ? "Ubah" : "Tambah"} {noun}</h2>
-            {fields.map((f) => (
-              <label key={f.key}>{f.label}
-                {f.options ? (
-                  <select value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}>
-                    {f.options.map((o) => <option key={o}>{o}</option>)}
-                  </select>
-                ) : f.type === "textarea" ? (
-                  <textarea rows="3" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
-                ) : (
-                  <input type={f.type || "text"} required value={form[f.key]}
-                    onChange={(e) => setForm({ ...form, [f.key]: f.type === "number" ? Number(e.target.value) : e.target.value })} />
-                )}
-              </label>
-            ))}
+            <div className={showPv ? "split" : ""}>
+              <div className="fields">{fields.filter((f) => !f.formHidden).map(renderField)}</div>
+              {showPv && <aside className="pv-wrap"><small>Pratinjau</small>{preview(form)}</aside>}
+            </div>
             <div className="row-end">
+              <button type="button" className="btn ghost" onClick={() => setShowPv(!showPv)}>
+                {showPv ? "Sembunyikan pratinjau" : "Pratinjau"}
+              </button>
               <button type="button" className="btn ghost" onClick={() => setForm(null)}>Batal</button>
               <button className="btn primary">Simpan</button>
             </div>
@@ -140,10 +252,21 @@ function CrudPage({ title, noun, items, setItems, fields, update = true, searcha
         </div>
       )}
 
+      {view && (
+        <div className="overlay" onClick={() => setView(null)}>
+          <div className="modal small" onClick={(e) => e.stopPropagation()}>
+            <small className="muted">Pratinjau {noun}</small>
+            {preview(view)}
+            <div className="row-end"><button className="btn primary" onClick={() => setView(null)}>Tutup</button></div>
+          </div>
+        </div>
+      )}
+
       {del && (
         <div className="overlay" onClick={() => setDel(null)}>
           <div className="modal small" onClick={(e) => e.stopPropagation()}>
             <h2>Hapus {noun}?</h2>
+            {preview(del)}
             <p className="muted">Data ini akan dihapus dari daftar dan tidak bisa dikembalikan.</p>
             <div className="row-end">
               <button className="btn ghost" onClick={() => setDel(null)}>Batal</button>
@@ -163,7 +286,7 @@ function Table({ cols, rows, actions }) {
         <thead>
           <tr>
             <th>No</th>
-            {cols.map((c) => <th key={c.key}>{c.label}</th>)}
+            {cols.map((c) => <th key={c.key}>{c.colLabel || c.label}</th>)}
             {actions && <th>Aksi</th>}
           </tr>
         </thead>
@@ -174,7 +297,7 @@ function Table({ cols, rows, actions }) {
               <td>{i + 1}</td>
               {cols.map((c) => (
                 <td key={c.key}>
-                  {c.key === "status" ? <span className={`badge ${r.status}`}>{r.status}</span>
+                  {c.cell ? c.cell(r) : c.key === "status" ? <span className={`badge ${r.status}`}>{r.status}</span>
                     : ["harga", "total"].includes(c.key) ? rupiah(r[c.key]) : r[c.key]}
                 </td>
               ))}
@@ -230,16 +353,25 @@ function Pelanggan({ items }) {
 
 /* ---------- Laporan penjualan (Read + Search per bulan) ---------- */
 function Laporan({ pesanan }) {
-  const [bulan, setBulan] = useState(""); // format YYYY-MM
-  const rows = pesanan.filter((o) => !bulan || o.tanggal.startsWith(bulan));
+  const [tanggal, setTanggal] = useState(""); // format YYYY-MM-DD dari date picker
+  const [sebulan, setSebulan] = useState(false); // true = tampilkan satu bulan penuh
+  const prefix = sebulan ? tanggal.slice(0, 7) : tanggal;
+  const rows = pesanan.filter((o) => o.tanggal.startsWith(prefix));
   const total = rows.reduce((s, o) => s + o.total, 0);
   return (
     <section>
       <header className="page-head">
-        <h1>Laporan penjualan</h1>
-        <label className="inline">Bulan
-          <input type="month" value={bulan} onChange={(e) => setBulan(e.target.value)} />
-        </label>
+        <h1>Laporan keuangan</h1>
+        <div className="tools">
+          <label className="inline">Tanggal
+            <input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} />
+          </label>
+          <label className="inline check">
+            <input type="checkbox" checked={sebulan} disabled={!tanggal} onChange={(e) => setSebulan(e.target.checked)} />
+            Satu bulan penuh
+          </label>
+          <button className="btn ghost" onClick={() => { setTanggal(""); setSebulan(false); }}>Reset</button>
+        </div>
       </header>
       <div className="stats two">
         <div className="stat"><strong>{rows.length}</strong><span>Transaksi</span></div>
@@ -276,20 +408,29 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [d, setD] = useState(seed);
   const set = (k) => (v) => setD((p) => ({ ...p, [k]: v }));
+  const namaTopeng = d.topeng.map((t) => t.nama);
 
   if (!auth) return <Login onLogin={() => setAuth(true)} />;
 
   const pages = {
     dashboard: <Dashboard d={d} />,
-    topeng: <CrudPage title="Data topeng" noun="topeng" items={d.topeng} setItems={set("topeng")}
-      fields={[{ key: "nama", label: "Nama topeng" }, { key: "daerah", label: "Daerah asal" }, { key: "kategori", label: "Kategori", options: ["Tari", "Ritual", "Hiasan"] }, { key: "deskripsi", label: "Deskripsi", type: "textarea", hideInTable: true }]} />,
-    video: <CrudPage title="Kelola video AI" noun="video" items={d.video} setItems={set("video")} update={false} searchable={false}
-      fields={[{ key: "judul", label: "Judul video" }, { key: "topeng", label: "Topeng terkait" }, { key: "status", label: "Status", options: ["Diproses", "Selesai"] }]} />,
-    kuis: <CrudPage title="Kelola kuis" noun="soal" items={d.kuis} setItems={set("kuis")}
-      fields={[{ key: "pertanyaan", label: "Pertanyaan" }, { key: "jawaban", label: "Jawaban benar" }, { key: "tingkat", label: "Tingkat", options: ["Mudah", "Sedang", "Sulit"] }]} />,
-    produk: <CrudPage title="Pengelolaan produk" noun="produk" items={d.produk} setItems={set("produk")}
-      fields={[{ key: "nama", label: "Nama produk" }, { key: "harga", label: "Harga (Rp)", type: "number" }, { key: "stok", label: "Stok", type: "number" }, { key: "kategori", label: "Kategori", options: ["Souvenir", "Dekorasi", "Koleksi"] }]} />,
-    pesanan: <CrudPage title="Pengelolaan pesanan" noun="pesanan" items={d.pesanan} setItems={set("pesanan")}
+    topeng: <CrudPage title="Data topeng" noun="topeng" items={d.topeng} setItems={set("topeng")} preview={PV.topeng}
+      fields={[{ key: "nama", label: "Nama topeng" }, { key: "sifat", label: "Sifat utama (mis. Pemberani)" }, { key: "deskripsi", label: "Deskripsi", type: "textarea", hideInTable: true }]} />,
+    video: <CrudPage title="Kelola video AI" noun="video" items={d.video} setItems={set("video")} preview={PV.video} update={false} searchable={false}
+      fields={[{ key: "judul", label: "Judul video" }, { key: "topeng", label: "Topeng terkait", options: namaTopeng }, { key: "url", label: "File video AI", type: "file", accept: "video/*", nameKey: "namaFile", required: true, hideInTable: true }, { key: "namaFile", label: "File", formHidden: true }]} />,
+    kuis: <CrudPage title="Kelola kuis kepribadian" noun="pertanyaan" items={d.kuis} setItems={set("kuis")} preview={PV.kuis}
+      fields={[
+        { key: "pertanyaan", label: "Pertanyaan" },
+        { key: "opsi", label: "Pilihan jawaban", colLabel: "Karakter yang dituju", type: "choices", options: namaTopeng,
+          hint: "Tiap pilihan mengarah ke satu karakter topeng. Tidak ada jawaban benar atau salah.",
+          cell: (r) => [...new Set(r.opsi.map((o) => o.karakter))].join(", ") },
+      ]} />,
+    produk: <CrudPage title="Pengelolaan produk" noun="produk" items={d.produk} setItems={set("produk")} preview={PV.produk}
+      fields={[{ key: "nama", label: "Nama produk" },
+        { key: "gambar", label: "Gambar produk", colLabel: "Gambar", type: "file", accept: "image/*", nameKey: "namaGambar",
+          cell: (r) => (r.gambar ? <img className="thumb" src={r.gambar} alt={r.nama} /> : "-") },
+        { key: "harga", label: "Harga (Rp)", type: "number" }, { key: "stok", label: "Stok", type: "number" }]} />,
+    pesanan: <CrudPage title="Pengelolaan pesanan" noun="pesanan" items={d.pesanan} setItems={set("pesanan")} preview={PV.pesanan}
       fields={[{ key: "pelanggan", label: "Pelanggan" }, { key: "produk", label: "Produk" }, { key: "jumlah", label: "Jumlah", type: "number" }, { key: "total", label: "Total (Rp)", type: "number" }, { key: "tanggal", label: "Tanggal", type: "date" }, { key: "status", label: "Status", options: ["Diproses", "Dikirim", "Selesai"] }]} />,
     pelanggan: <Pelanggan items={d.pelanggan} />,
     laporan: <Laporan pesanan={d.pesanan} />,
