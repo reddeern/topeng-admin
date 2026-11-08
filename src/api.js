@@ -126,6 +126,8 @@ function resource(path, { fromApi, toBody, multipart = false }) {
 const topengIn = (t) => ({
   id: t.topeng_id, nama: t.topeng_nama, sifat: t.sifat_topeng, deskripsi: t.topeng_deskripsi,
   gambar: t.topeng_gambar_url || "", namaGambar: basename(t.topeng_gambar),
+  qrUrl: t.topeng_qr_url || "", videoStatus: t.videos?.[0]?.video_status || "",
+  hasVideo: (t.videos || []).length > 0,
 });
 const topengOut = (f) => {
   const fd = new FormData();

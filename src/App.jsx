@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import "./index.css";
 import { api, setUnauthorizedHandler } from "./api";
 
-// Import gambar dengan nama loginImg agar tidak bentrok dengan halaman Login
-import loginImg from "./assets/Login.png"; 
 import Ornament from "./components/Ornament";
 
 // Halaman

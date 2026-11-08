@@ -6,17 +6,22 @@ import { useTopengOptions } from "../utils/hooks";
 
 export default function Video() {
   const topeng = useTopengOptions();
+  const topengOptions = useMemo(() => topeng.map((t) => ({
+    value: t.value,
+    label: t.hasVideo ? `${t.label} (sudah ada video)` : t.label,
+    disabled: t.hasVideo,
+  })), [topeng]);
   const fields = useMemo(() => [
     { key: "judul", label: "Judul video" },
-    { key: "topengId", label: "Topeng terkait", colLabel: "Topeng", type: "select", options: topeng, labelKey: "topeng",
+    { key: "topengId", label: "Topeng terkait", colLabel: "Topeng", type: "select", options: topengOptions, labelKey: "topeng",
       cell: (r) => r.topeng || "-" },
     { key: "url", label: "File video AI (mp4/webm/mov, maks. 300 MB)", type: "file", accept: "video/*",
       nameKey: "namaFile", fileKey: "file", required: true, maxMB: 300, hideInTable: true },
     { key: "namaFile", label: "File", formHidden: true },
     { key: "status", label: "Status", formHidden: true },
-  ], [topeng]);
+  ], [topengOptions]);
 
-  // Sesuai sitemap: video hanya Create, Read, Delete (tanpa ubah dan tanpa pencarian)
+  // Satu topeng hanya punya satu video AI; update dipakai untuk mengganti video.
   return <CrudPage title="Kelola video AI" noun="video" fields={fields} preview={VideoPreview} api={api.video}
-    canUpdate={false} searchable={false} paginated />;
+    searchable={false} paginated />;
 }

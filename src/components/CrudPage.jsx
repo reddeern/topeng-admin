@@ -8,7 +8,7 @@ const norm = (opts = []) => opts.map((o) => (typeof o === "string" ? { value: o,
    `api` = { list, create, update, remove } dari src/api.js */
 export default function CrudPage({
   title, noun, fields, preview: Preview, api,
-  canUpdate = true, searchable = true, paginated = false, readOnly = false,
+  canUpdate = true, searchable = true, paginated = false, readOnly = false, extraActions,
 }) {
   const [rows, setRows] = useState([]);
   const [loaded, setLoaded] = useState("");
@@ -44,15 +44,19 @@ export default function CrudPage({
     Object.fromEntries(
       fields.map((f) => {
         const opts = norm(f.options);
+        const first = opts.find((o) => !o.disabled);
         return [
           f.key,
           f.type === "choices"
             ? Array.from({ length: 4 }, () => ({ teks: "", topengId: opts[0]?.value ?? "", karakter: opts[0]?.label ?? "" }))
-            : f.type === "select" ? opts[0]?.value ?? ""
+            : f.type === "select" ? first?.value ?? ""
             : f.type === "number" ? 0 : "",
         ];
       }).concat(
-        fields.filter((f) => f.labelKey && f.type === "select").map((f) => [f.labelKey, norm(f.options)[0]?.label ?? ""])
+        fields.filter((f) => f.labelKey && f.type === "select").map((f) => {
+          const first = norm(f.options).find((o) => !o.disabled);
+          return [f.labelKey, first?.label ?? ""];
+        })
       )
     );
 
@@ -62,10 +66,11 @@ export default function CrudPage({
     const out = { ...data };
     fields.forEach((f) => {
       const opts = norm(f.options);
-      if (!opts[0]) return;
+      const first = opts.find((o) => !o.disabled);
+      if (!first) return;
       if (f.type === "select" && (out[f.key] === "" || out[f.key] == null)) {
-        out[f.key] = opts[0].value;
-        if (f.labelKey) out[f.labelKey] = opts[0].label;
+        out[f.key] = first.value;
+        if (f.labelKey) out[f.labelKey] = first.label;
       }
       if (f.type === "choices") {
         out[f.key] = out[f.key].map((o) =>
@@ -158,15 +163,17 @@ export default function CrudPage({
 
     if (f.type === "select") {
       const opts = norm(f.options);
+      const enabled = opts.filter((o) => !o.disabled);
       return (
         <label key={f.key}>{f.label}
-          <select required value={form[f.key] === "" ? (opts[0]?.value ?? "") : form[f.key]}
+          <select required={f.required !== false} value={form[f.key] === "" ? (enabled[0]?.value ?? "") : form[f.key]}
             onChange={(e) => {
               const hit = opts.find((x) => String(x.value) === e.target.value);
               setForm({ ...form, [f.key]: hit ? hit.value : e.target.value, ...(f.labelKey ? { [f.labelKey]: hit?.label ?? "" } : {}) });
             }}>
             {opts.length === 0 && <option value="">Belum ada pilihan</option>}
-            {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {opts.length > 0 && enabled.length === 0 && <option value="">Tidak ada pilihan tersedia</option>}
+            {opts.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
           </select>
         </label>
       );
@@ -184,7 +191,7 @@ export default function CrudPage({
     );
   };
 
-  const noOptions = fields.some((f) => (f.type === "select" || f.type === "choices") && norm(f.options).length === 0);
+  const noOptions = fields.some((f) => (f.type === "select" || f.type === "choices") && !norm(f.options).some((o) => !o.disabled));
 
   return (
     <section>
@@ -192,7 +199,7 @@ export default function CrudPage({
         <h1>{title}</h1>
         <div className="tools">
           {searchable && (
-            <input className="search" placeholder={`Cari ${noun}…`} value={q}
+            <input className="search" placeholder={`Cari ${noun}...`} value={q}
               onChange={(e) => { setQ(e.target.value); setPage(1); }} />
           )}
           {!readOnly && <button className="btn primary" onClick={() => openForm(empty())}>Tambah {noun}</button>}
@@ -215,6 +222,7 @@ export default function CrudPage({
           <>
             <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>
             {canUpdate && <button className="btn ghost" onClick={() => openForm(r)}>Ubah</button>}
+            {extraActions && extraActions(r)}
             <button className="btn danger" onClick={() => { setDelErr(""); setDel(r); }}>Hapus</button>
           </>
         )}
@@ -234,7 +242,7 @@ export default function CrudPage({
               <div className="progress-wrap" role="status">
                 <div className="progress"><div style={{ width: `${progress}%` }} /></div>
                 <span className="muted small-note">
-                  {progress < 100 ? `Mengunggah… ${progress}%` : "Upload selesai, sedang menyimpan di server. Mohon tunggu, jangan tutup halaman."}
+                  {progress < 100 ? `Mengunggah... ${progress}%` : "Upload selesai, sedang menyimpan di server. Mohon tunggu, jangan tutup halaman."}
                 </span>
               </div>
             )}
@@ -245,7 +253,7 @@ export default function CrudPage({
                 </button>
               )}
               <button type="button" className="btn ghost" disabled={saving} onClick={() => setForm(null)}>Batal</button>
-              <button className="btn primary" disabled={saving || noOptions}>{saving ? "Menyimpan…" : "Simpan"}</button>
+              <button className="btn primary" disabled={saving || noOptions}>{saving ? "Menyimpan..." : "Simpan"}</button>
             </div>
           </form>
         </div>
@@ -270,7 +278,7 @@ export default function CrudPage({
             {delErr && <p className="error" role="alert">{delErr}</p>}
             <div className="row-end">
               <button className="btn ghost" disabled={deleting} onClick={() => setDel(null)}>Batal</button>
-              <button className="btn danger" disabled={deleting} onClick={remove}>{deleting ? "Menghapus…" : "Ya, hapus"}</button>
+              <button className="btn danger" disabled={deleting} onClick={remove}>{deleting ? "Menghapus..." : "Ya, hapus"}</button>
             </div>
           </div>
         </div>
