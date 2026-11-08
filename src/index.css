@@ -129,3 +129,39 @@ label.inline select { width: auto; }
 
 label.inline.check { gap: 6px; font-weight: 400; }
 label.inline.check input { width: auto; }
+
+/* ===== tambahan untuk koneksi API ===== */
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+.banner.error { background: #fbe9e7; border: 1px solid #e8b4ae; color: var(--danger); }
+.pager { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 16px; font-size: .9rem; color: var(--clay); }
+.pager .btn { padding: 6px 14px; }
+.filter { width: auto; }
+.stats.six { grid-template-columns: repeat(3, 1fr); }
+.stats.three { grid-template-columns: repeat(3, 1fr); margin-bottom: 8px; }
+.progress-wrap { display: flex; flex-direction: column; gap: 6px; }
+.progress { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--clay); transition: width .2s; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+.info-grid .full { grid-column: 1 / -1; }
+.info-grid small { color: var(--clay); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+.info-grid p { margin-top: 2px; }
+.total-line { text-align: right; }
+.total-line strong { font-family: "Fraunces", serif; font-size: 1.2rem; color: var(--clay); }
+.qty-row { display: flex; gap: 6px; }
+.qty-row input { width: 80px; }
+.qty-row .btn { padding: 6px 12px; }
+.modal.wide .opt-row { grid-template-columns: 1fr 170px; }
+
+/* lencana status */
+.badge.selesai, .badge.lunas, .badge.Selesai { background: #dfead6; color: #3d5a2b; }
+.badge.dikirim, .badge.Dikirim, .badge.processing { background: #f6e2bd; color: #7a5410; }
+.badge.menunggu, .badge.menunggu_verifikasi, .badge.pending, .badge.belum_bayar { background: #f3e2cc; color: var(--clay); }
+.badge.diproses { background: #dbe6f3; color: #2c4f7a; }
+.badge.dibatalkan, .badge.ditolak, .badge.gagal { background: #f5d9d6; color: var(--danger); }
+.badge { text-transform: capitalize; }
+
+@media (max-width: 800px) {
+  .stats.six, .stats.three { grid-template-columns: repeat(2, 1fr); }
+  .info-grid { grid-template-columns: 1fr; }
+}
