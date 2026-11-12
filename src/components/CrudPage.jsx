@@ -8,7 +8,7 @@ const norm = (opts = []) => opts.map((o) => (typeof o === "string" ? { value: o,
    `api` = { list, create, update, remove } dari src/api.js */
 export default function CrudPage({
   title, noun, fields, preview: Preview, api,
-  canUpdate = true, searchable = true, paginated = false, readOnly = false, extraActions,
+  canView = true, canUpdate = true, searchable = true, paginated = false, readOnly = false, extraActions,
 }) {
   const [rows, setRows] = useState([]);
   const [loaded, setLoaded] = useState("");
@@ -113,25 +113,35 @@ export default function CrudPage({
     }
   };
 
-  const renderField = (f) => {
+  const renderField = (f, data = form, isView = false) => {
     const set = (v) => setForm({ ...form, [f.key]: v });
 
     if (f.type === "choices") {
       const opts = norm(f.options);
-      const upd = (i, patch) => set(form[f.key].map((x, j) => (j === i ? { ...x, ...patch } : x)));
+      const upd = (i, patch) => set(data[f.key].map((x, j) => (j === i ? { ...x, ...patch } : x)));
       return (
         <fieldset key={f.key}>
           <legend>{f.label}</legend>
           <p className="muted small-note">{f.hint}</p>
           {opts.length === 0 && <p className="error small-note">Belum ada data topeng. Tambahkan topeng terlebih dahulu.</p>}
-          {form[f.key].map((o, i) => (
+          {(data[f.key] || []).map((o, i) => (
             <div className="opt-row" key={i}>
-              <input required placeholder={`Pilihan ${i + 1}`} value={o.teks} onChange={(e) => upd(i, { teks: e.target.value })} />
-              <select required value={o.topengId === "" ? (opts[0]?.value ?? "") : o.topengId}
-                onChange={(e) => {
+              <input
+                required={!isView}
+                readOnly={isView}
+                placeholder={`Pilihan ${i + 1}`}
+                value={o.teks}
+                onChange={isView ? undefined : (e) => upd(i, { teks: e.target.value })}
+              />
+              <select
+                required={!isView}
+                disabled={isView}
+                value={o.topengId === "" ? (opts[0]?.value ?? "") : o.topengId}
+                onChange={isView ? undefined : (e) => {
                   const hit = opts.find((x) => String(x.value) === e.target.value);
                   upd(i, { topengId: hit ? hit.value : e.target.value, karakter: hit?.label ?? "" });
-                }}>
+                }}
+              >
                 {opts.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
@@ -143,8 +153,12 @@ export default function CrudPage({
     if (f.type === "file") {
       return (
         <label key={f.key}>{f.label}
-          <input type="file" accept={f.accept} required={f.required && !form.id}
-            onChange={(e) => {
+          <input
+            type="file"
+            accept={f.accept}
+            disabled={isView}
+            required={!isView && f.required && !data.id}
+            onChange={isView ? undefined : (e) => {
               const file = e.target.files[0];
               if (!file) return;
               if (f.maxMB && file.size > f.maxMB * 1024 * 1024) {
@@ -154,9 +168,10 @@ export default function CrudPage({
               }
               setFormErr("");
               setForm({ ...form, [f.key]: URL.createObjectURL(file), [f.nameKey]: file.name, [f.fileKey]: file });
-            }} />
-          {form[f.nameKey] && <span className="muted small-note">Dipilih: {form[f.nameKey]}</span>}
-          {f.accept.startsWith("image") && form[f.key] && <img className="thumb big" src={form[f.key]} alt="Pratinjau gambar" />}
+            }}
+          />
+          {data[f.nameKey] && <span className="muted small-note">Dipilih: {data[f.nameKey]}</span>}
+          {f.accept.startsWith("image") && data[f.key] && <img className="thumb big" src={data[f.key]} alt="Pratinjau gambar" />}
         </label>
       );
     }
@@ -166,11 +181,15 @@ export default function CrudPage({
       const enabled = opts.filter((o) => !o.disabled);
       return (
         <label key={f.key}>{f.label}
-          <select required={f.required !== false} value={form[f.key] === "" ? (enabled[0]?.value ?? "") : form[f.key]}
-            onChange={(e) => {
+          <select
+            required={!isView && f.required !== false}
+            disabled={isView}
+            value={data[f.key] === "" ? (enabled[0]?.value ?? "") : data[f.key]}
+            onChange={isView ? undefined : (e) => {
               const hit = opts.find((x) => String(x.value) === e.target.value);
               setForm({ ...form, [f.key]: hit ? hit.value : e.target.value, ...(f.labelKey ? { [f.labelKey]: hit?.label ?? "" } : {}) });
-            }}>
+            }}
+          >
             {opts.length === 0 && <option value="">Belum ada pilihan</option>}
             {opts.length > 0 && enabled.length === 0 && <option value="">Tidak ada pilihan tersedia</option>}
             {opts.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
@@ -182,10 +201,29 @@ export default function CrudPage({
     return (
       <label key={f.key}>{f.label}
         {f.type === "textarea" ? (
-          <textarea rows="3" required value={form[f.key]} onChange={(e) => set(e.target.value)} />
+          <textarea
+            rows="3"
+            required={!isView && f.required !== false}
+            readOnly={isView}
+            maxLength={isView ? undefined : f.maxLength}
+            value={data[f.key] ?? ""}
+            onChange={isView ? undefined : (e) => set(e.target.value)}
+          />
         ) : (
-          <input type={f.type || "text"} required min={f.type === "number" ? 0 : undefined} value={form[f.key]}
-            onChange={(e) => set(f.type === "number" ? Number(e.target.value) : e.target.value)} />
+          <input
+            type={f.type || "text"}
+            required={!isView && f.required !== false}
+            readOnly={isView}
+            min={f.type === "number" ? 0 : undefined}
+            maxLength={isView ? undefined : f.maxLength}
+            value={data[f.key] ?? ""}
+            onChange={isView ? undefined : (e) => set(f.type === "number" ? Number(e.target.value) : e.target.value)}
+          />
+        )}
+        {!isView && f.maxLength && (
+          <span className="muted small-note">
+            {(data[f.key] || "").length}/{f.maxLength} karakter
+          </span>
         )}
       </label>
     );
@@ -220,7 +258,7 @@ export default function CrudPage({
         startNo={paginated ? (page - 1) * 20 : 0}
         actions={readOnly ? undefined : (r) => (
           <>
-            <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>
+            {canView && <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>}
             {canUpdate && <button className="btn ghost" onClick={() => openForm(r)}>Ubah</button>}
             {extraActions && extraActions(r)}
             <button className="btn danger" onClick={() => { setDelErr(""); setDel(r); }}>Hapus</button>
@@ -234,7 +272,7 @@ export default function CrudPage({
           <form className={`modal ${showPv ? "wide" : ""}`} onClick={(e) => e.stopPropagation()} onSubmit={save}>
             <h2>{form.id ? "Ubah" : "Tambah"} {noun}</h2>
             <div className={showPv ? "split" : ""}>
-              <div className="fields">{fields.filter((f) => !f.formHidden).map(renderField)}</div>
+              <div className="fields">{fields.filter((f) => !f.formHidden).map((f) => renderField(f, form, false))}</div>
               {showPv && Preview && <aside className="pv-wrap"><small>Pratinjau</small><Preview r={form} /></aside>}
             </div>
             {formErr && <p className="error" role="alert">{formErr}</p>}
@@ -247,7 +285,7 @@ export default function CrudPage({
               </div>
             )}
             <div className="row-end">
-              {Preview && (
+              {!form.id && Preview && (
                 <button type="button" className="btn ghost" onClick={() => setShowPv(!showPv)}>
                   {showPv ? "Sembunyikan pratinjau" : "Pratinjau"}
                 </button>
@@ -259,12 +297,17 @@ export default function CrudPage({
         </div>
       )}
 
-      {view && Preview && (
+      {view && (
         <div className="overlay" onClick={() => setView(null)}>
-          <div className="modal small" onClick={(e) => e.stopPropagation()}>
-            <small className="muted">Pratinjau {noun}</small>
-            <Preview r={view} />
-            <div className="row-end"><button className="btn primary" onClick={() => setView(null)}>Tutup</button></div>
+          <div className={`modal ${Preview ? "wide" : ""}`} onClick={(e) => e.stopPropagation()}>
+            <h2>Detail {noun}</h2>
+            <div className={Preview ? "split" : ""}>
+              <div className="fields">{fields.filter((f) => !f.formHidden).map((f) => renderField(f, view, true))}</div>
+              {Preview && <aside className="pv-wrap"><small>Pratinjau</small><Preview r={view} /></aside>}
+            </div>
+            <div className="row-end">
+              <button type="button" className="btn primary" onClick={() => setView(null)}>Tutup</button>
+            </div>
           </div>
         </div>
       )}

@@ -12,5 +12,5 @@ const fields = [
 ];
 
 export default function Produk() {
-  return <CrudPage title="Pengelolaan produk" noun="produk" fields={fields} preview={ProdukPreview} api={api.produk} paginated />;
+  return <CrudPage title="Pengelolaan produk" noun="produk" fields={fields} preview={ProdukPreview} api={api.produk} canView={false} paginated />;
 }

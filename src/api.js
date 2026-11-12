@@ -1,7 +1,3 @@
-/* Lapisan koneksi ke backend Laravel (Toko Topeng).
-   Semua halaman memakai objek `api` di bawah; bentuk datanya sudah
-   diterjemahkan ke nama field yang dipakai UI (nama, harga, stok, dst). */
-
 const BASE = String(import.meta.env?.VITE_API_URL || "http://localhost:8000/api").replace(/\/+$/, "");
 const TOKEN_KEY = "topeng_admin_token";
 
@@ -252,8 +248,10 @@ export const api = {
     remove: (id) => request("DELETE", `/admin/pesanan/${id}`),
   },
 
-  async laporan({ tahun, bulan, page } = {}) {
-    const d = await request("GET", "/admin/laporan/penjualan", { query: { tahun, bulan, page } });
+  async laporan({ tahun, bulan, tanggal_mulai, tanggal_selesai, page } = {}) {
+    const d = await request("GET", "/admin/laporan/penjualan", {
+      query: { tahun, bulan, tanggal_mulai, tanggal_selesai, page },
+    });
     const p = unwrap(d.pesanan);
     return {
       jumlahPesanan: d.ringkasan.jumlah_pesanan,
