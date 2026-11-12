@@ -26,10 +26,40 @@ const PAGES = {
   laporan: Laporan, produk: Produk, pesanan: Pesanan, pelanggan: Pelanggan,
 };
 
+const getPageFromPath = (pathname) => {
+  const slug = pathname.replace(/^\/+|\/+$/g, "");
+  return PAGES[slug] ? slug : "dashboard";
+};
+
 export default function App() {
   const [auth, setAuth] = useState(api.auth.hasToken());
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => getPageFromPath(window.location.pathname));
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Sinkronkan URL saat pertama kali dibuka atau status login berubah
+  useEffect(() => {
+    if (!auth) {
+      if (window.location.pathname !== "/login") {
+        window.history.replaceState(null, "", "/login");
+      }
+      return;
+    }
+    const slug = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    if (!PAGES[slug]) {
+      window.history.replaceState(null, "", `/${page}`);
+    }
+  }, [auth, page]);
+
+  // Dengarkan tombol Back / Forward browser
+  useEffect(() => {
+    const onPopState = () => {
+      if (!api.auth.hasToken()) return;
+      setPage(getPageFromPath(window.location.pathname));
+      setMenuOpen(false);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   // Token kedaluwarsa/dicabut -> kembali ke halaman login
   useEffect(() => {
@@ -38,22 +68,32 @@ export default function App() {
       setAuth(false);
       setPage("dashboard");
       setMenuOpen(false);
+      window.history.replaceState(null, "", "/login");
     });
   }, []);
+
+  const handleLogin = () => {
+    window.history.replaceState(null, "", `/${page}`);
+    setAuth(true);
+  };
 
   const logout = async () => {
     await api.auth.logout();
     setAuth(false);
     setPage("dashboard");
     setMenuOpen(false);
+    window.history.pushState(null, "", "/login");
   };
 
   const go = (k) => {
+    if (window.location.pathname !== `/${k}`) {
+      window.history.pushState(null, "", `/${k}`);
+    }
     setPage(k);
     setMenuOpen(false);
   };
 
-  if (!auth) return <Login onLogin={() => setAuth(true)} />;
+  if (!auth) return <Login onLogin={handleLogin} />;
 
   const Page = PAGES[page];
   return (
