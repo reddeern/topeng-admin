@@ -50,7 +50,8 @@ export default function CrudPage({
           f.type === "choices"
             ? Array.from({ length: 4 }, () => ({ teks: "", topengId: opts[0]?.value ?? "", karakter: opts[0]?.label ?? "" }))
             : f.type === "select" ? first?.value ?? ""
-            : f.type === "number" ? 0 : "",
+            : f.type === "file" ? null
+            : "",
         ];
       }).concat(
         fields.filter((f) => f.labelKey && f.type === "select").map((f) => {
@@ -160,14 +161,27 @@ export default function CrudPage({
             required={!isView && f.required && !data.id}
             onChange={isView ? undefined : (e) => {
               const file = e.target.files[0];
-              if (!file) return;
+              if (!file) {
+                setForm({ ...form, [f.key]: null, [f.nameKey]: "", [f.fileKey]: null });
+                return;
+              }
               if (f.maxMB && file.size > f.maxMB * 1024 * 1024) {
                 setFormErr(`Ukuran file maksimal ${f.maxMB} MB.`);
                 e.target.value = "";
                 return;
               }
               setFormErr("");
-              setForm({ ...form, [f.key]: URL.createObjectURL(file), [f.nameKey]: file.name, [f.fileKey]: file });
+              
+              const reader = new FileReader();
+              reader.onload = (ev) => {
+                setForm((prev) => ({
+                  ...prev,
+                  [f.key]: ev.target.result, 
+                  [f.nameKey]: file.name,
+                  [f.fileKey]: file
+                }));
+              };
+              reader.readAsDataURL(file);
             }}
           />
           {data[f.nameKey] && <span className="muted small-note">Dipilih: {data[f.nameKey]}</span>}
@@ -217,7 +231,11 @@ export default function CrudPage({
             min={f.type === "number" ? 0 : undefined}
             maxLength={isView ? undefined : f.maxLength}
             value={data[f.key] ?? ""}
-            onChange={isView ? undefined : (e) => set(f.type === "number" ? Number(e.target.value) : e.target.value)}
+            onChange={isView ? undefined : (e) => set(
+              f.type === "number" 
+                ? (e.target.value === "" ? "" : Number(e.target.value)) 
+                : e.target.value
+            )}
           />
         )}
         {!isView && f.maxLength && (
@@ -251,20 +269,22 @@ export default function CrudPage({
         </div>
       )}
 
-      <Table
-        cols={fields.filter((f) => !f.hideInTable)}
-        rows={rows}
-        loading={loading}
-        startNo={paginated ? (page - 1) * 20 : 0}
-        actions={readOnly ? undefined : (r) => (
-          <>
-            {canView && <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>}
-            {canUpdate && <button className="btn ghost" onClick={() => openForm(r)}>Ubah</button>}
-            {extraActions && extraActions(r)}
-            <button className="btn danger" onClick={() => { setDelErr(""); setDel(r); }}>Hapus</button>
-          </>
-        )}
-      />
+      <div className="table-wrap">
+        <Table
+          cols={fields.filter((f) => !f.hideInTable)}
+          rows={rows}
+          loading={loading}
+          startNo={paginated ? (page - 1) * 20 : 0}
+          actions={readOnly ? undefined : (r) => (
+            <>
+              {canView && <button className="btn ghost" onClick={() => setView(r)}>Lihat</button>}
+              {canUpdate && <button className="btn ghost" onClick={() => openForm(r)}>Ubah</button>}
+              {extraActions && extraActions(r)}
+              <button className="btn danger" onClick={() => { setDelErr(""); setDel(r); }}>Hapus</button>
+            </>
+          )}
+        />
+      </div>
       {paginated && <Pager page={page} lastPage={lastPage} onChange={setPage} />}
 
       {form && (
@@ -285,11 +305,6 @@ export default function CrudPage({
               </div>
             )}
             <div className="row-end">
-              {!form.id && Preview && (
-                <button type="button" className="btn ghost" onClick={() => setShowPv(!showPv)}>
-                  {showPv ? "Sembunyikan pratinjau" : "Pratinjau"}
-                </button>
-              )}
               <button type="button" className="btn ghost" disabled={saving} onClick={() => setForm(null)}>Batal</button>
               <button className="btn primary" disabled={saving || noOptions}>{saving ? "Menyimpan..." : "Simpan"}</button>
             </div>

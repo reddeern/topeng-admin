@@ -56,14 +56,14 @@ function DetailModal({ data, onClose, onSaved }) {
               ? <a href={data.buktiUrl} target="_blank" rel="noreferrer"><img className="thumb big" src={data.buktiUrl} alt="Bukti pembayaran" /></a>
               : <p className="muted">Belum diunggah pelanggan.</p>}
           </div>
-          <label>Status pesanan
-            <select value={status} disabled={dibatalkan} onChange={(e) => setStatus(e.target.value)}>
-              {STATUS.map((s) => <option key={s} value={s}>{labelStatus(s)}</option>)}
-            </select>
-          </label>
           <label>Status pembayaran
             <select value={bayar} onChange={(e) => setBayar(e.target.value)}>
               {BAYAR.map((s) => <option key={s} value={s}>{labelStatus(s)}</option>)}
+            </select>
+          </label>
+          <label>Status pesanan
+            <select value={status} disabled={dibatalkan} onChange={(e) => setStatus(e.target.value)}>
+              {STATUS.map((s) => <option key={s} value={s}>{labelStatus(s)}</option>)}
             </select>
           </label>
         </div>
@@ -190,7 +190,7 @@ export default function Pesanan() {
         loading={loading}
         startNo={(page - 1) * 20}
         actions={(r) => (
-          <button className="btn ghost" onClick={() => openDetail(r)}>Lihat / Ubah</button>
+          <button className="btn ghost" onClick={() => openDetail(r)}>Ubah</button>
         )}
       />
       <Pager page={page} lastPage={lastPage} onChange={setPage} />

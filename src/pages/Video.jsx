@@ -6,11 +6,14 @@ import { useTopengOptions } from "../utils/hooks";
 
 export default function Video() {
   const topeng = useTopengOptions();
-  const topengOptions = useMemo(() => topeng.map((t) => ({
-    value: t.value,
-    label: t.hasVideo ? `${t.label} (sudah ada video)` : t.label,
-    disabled: t.hasVideo,
-  })), [topeng]);
+  const topengOptions = useMemo(() => 
+    topeng
+      .filter((t) => !t.hasVideo)
+      .map((t) => ({
+        value: t.value,
+        label: t.label,
+      })), 
+  [topeng]);
   const fields = useMemo(() => [
     { key: "judul", label: "Judul video" },
     { key: "topengId", label: "Topeng terkait", colLabel: "Topeng", type: "select", options: topengOptions, labelKey: "topeng",
