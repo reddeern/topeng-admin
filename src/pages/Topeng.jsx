@@ -16,7 +16,7 @@ const fields = [
     key: "deskripsi",
     label: "Deskripsi",
     type: "textarea",
-    maxLength: 1000,
+    maxLength: 4000,
     cell: (r) => <span title={r.deskripsi}>{truncate(r.deskripsi, 65)}</span>,
   },
   {
