@@ -1,4 +1,4 @@
-const BASE = String(import.meta.env?.VITE_API_URL || "http://10.10.3.33:8000/api").replace(/\/+$/, "");
+const BASE = String(import.meta.env?.VITE_API_URL || "https://topengmalang.alwaysdata.net/api").replace(/\/+$/, "");
 const TOKEN_KEY = "topeng_admin_token";
 
 /* ---------- token ---------- */
